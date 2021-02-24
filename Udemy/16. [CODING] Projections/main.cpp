@@ -10,7 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 // Window dimensions
-const GLint WIDTH = 800, HEIGHT = 600;
+const GLint WIDTH = 1600, HEIGHT = 900;
 const float toRadians = 3.14159265f / 180.0f;
 
 GLuint VBO, VAO, IBO, shader, uniformModel, uniformProjection;
@@ -41,7 +41,7 @@ uniform mat4 projection;                                                      \n
 void main()                                                                   \n\
 {                                                                             \n\
     gl_Position = projection * model * vec4(pos, 1.0);						  \n\
-	vCol = vec4(clamp(pos, 0.0f, 1.0f), 1.0);								  \n\
+    vCol = vec4(pos*0.5+0.5, 1.0);                                  		  \n\
 }";
 
 // Fragment Shader
@@ -214,7 +214,7 @@ int main()
 
     CreateTriangle();
     CompileShaders();
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), GLfloat(WIDTH) / GLfloat(HEIGHT), 1.0f, 10.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(30.0f), GLfloat(WIDTH) / GLfloat(HEIGHT), 1.0f, 10.0f);
 
     // Loop until window closed
     while (!glfwWindowShouldClose(mainWindow))

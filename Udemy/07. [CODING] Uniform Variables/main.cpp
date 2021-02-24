@@ -1,30 +1,36 @@
+#include <cmath>
+#include <iostream>
 #include <stdio.h>
 #include <string.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 // Window dimensions
 const GLint WIDTH = 800;
 const GLint HEIGHT = 600;
 
-GLuint VBO, VAO, shader;
+GLuint VBO, VAO, shader, Rotate_GLuint;
+glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
 
 // Vertex Shader code
 static const char *vShader = "                                                \n\
 #version 330                                                                  \n\
-                                                                              \n\
 layout (location = 0) in vec3 pos;											  \n\
+uniform mat4 Rotate_mat4;                                                     \n\
                                                                               \n\
 void main()                                                                   \n\
 {                                                                             \n\
-    gl_Position = vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);				  \n\
+    gl_Position = Rotate_mat4 * vec4( 0.4*pos.x,0.4* pos.y, pos.z, 1.0);	  \n\
 }";
 
 // Fragment Shader
 static const char *fShader = "                                                \n\
 #version 330                                                                  \n\
-                                                                              \n\
 out vec4 colour;                                                              \n\
                                                                               \n\
 void main()                                                                   \n\
@@ -80,7 +86,7 @@ void AddShader(GLuint theProgram, const char *shaderCode, GLenum shaderType)
 
 void CompileShaders()
 {
-    shader = glCreateProgram(); // Get shader ID
+    shader = glCreateProgram();
 
     if (!shader)
     {
@@ -111,6 +117,8 @@ void CompileShaders()
         printf("Error validating program: '%s'\n", eLog);
         return;
     }
+
+    Rotate_GLuint = glGetUniformLocation(shader, "Rotate_mat4");
 }
 
 int main()
@@ -165,20 +173,38 @@ int main()
     CreateTriangle();
     CompileShaders();
 
+    double lastTime = glfwGetTime();
+    int nbFrames = 0;
+
     // Loop until window closed
     while (!glfwWindowShouldClose(mainWindow))
     {
+
+        // Measure speed
+        double currentTime = glfwGetTime();
+        nbFrames++;
+        if (currentTime - lastTime >= 1.0)
+        { // If last prinf() was more than 1 sec ago
+            // printf and reset timer
+            std::cout << "FPS: " << nbFrames << std::endl;
+            nbFrames = 0;
+            lastTime += 1.0;
+        }
+
         // Get + Handle user input events
         glfwPollEvents();
+
+        transform = glm::rotate(transform, (GLfloat)glfwGetTime() / 100000, glm::vec3(0.0f, 0.0f, 1.0f));
 
         // Clear window
         glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shader); // Shader id = int number
+        glUseProgram(shader);
+        glUniformMatrix4fv(Rotate_GLuint, 1, GL_FALSE, glm::value_ptr(transform)); // ID , size, transpose?, location
 
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 3); // mode , first, size
         glBindVertexArray(0);
 
         glUseProgram(0);
